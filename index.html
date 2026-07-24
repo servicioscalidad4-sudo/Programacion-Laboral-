@@ -11,21 +11,24 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root{
-    --ink:#233238;
-    --ink-soft:#4d5c60;
-    --paper:#F6F4EF;
+    --ink:#1A2333;
+    --ink-soft:#5B6472;
+    --paper:#F5F6FA;
     --paper-card:#FFFFFF;
-    --line:#E1DDD3;
-    --sage:#5F7F72;
-    --sage-bg:#E7EEE9;
-    --amber:#B98A3C;
-    --amber-bg:#F5EBD8;
-    --burgundy:#8C4550;
-    --burgundy-bg:#F3E4E5;
-    --slate:#7C8A8D;
-    --slate-bg:#EBEEEC;
+    --line:#E3E6EE;
+    --sage:#0EA872;
+    --sage-bg:#DCF6EA;
+    --amber:#E88C1F;
+    --amber-bg:#FCEACB;
+    --burgundy:#E5405E;
+    --burgundy-bg:#FCE1E7;
+    --slate:#6C7A89;
+    --slate-bg:#E9EDF2;
+    --accent:#6D5BF6;
+    --accent2:#00C2D1;
+    --accent-bg:#EDEAFE;
     --radius:10px;
-    --shadow: 0 1px 2px rgba(35,50,56,0.06), 0 4px 14px rgba(35,50,56,0.05);
+    --shadow: 0 1px 2px rgba(26,35,51,0.06), 0 4px 14px rgba(26,35,51,0.06);
   }
   *{box-sizing:border-box;}
   body{
@@ -46,55 +49,91 @@
     align-items:center;
     justify-content:center;
     padding:24px;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(109,91,246,0.35), transparent 45%),
+      radial-gradient(circle at 85% 75%, rgba(0,194,209,0.30), transparent 50%),
+      radial-gradient(circle at 50% 100%, rgba(229,64,94,0.12), transparent 50%),
+      #0B0F1C;
+    position:relative;
+    overflow:hidden;
+  }
+  #login-screen::before{
+    content:'';
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size:42px 42px;
+    mask-image:radial-gradient(circle at 50% 40%, black, transparent 75%);
   }
   .login-card{
-    background:var(--paper-card);
-    border:1px solid var(--line);
-    border-radius:16px;
-    padding:40px 36px;
+    position:relative;
+    z-index:1;
+    background:rgba(255,255,255,0.055);
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:20px;
+    padding:42px 36px;
     width:100%;
-    max-width:360px;
-    box-shadow:var(--shadow);
+    max-width:380px;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.02), 0 20px 60px rgba(0,0,0,0.45), 0 0 80px rgba(109,91,246,0.15);
     text-align:center;
+    color:#F2F3F8;
   }
   .login-mark{
-    width:44px;height:44px;border-radius:50%;
-    background:var(--ink);
-    margin:0 auto 18px;
+    width:48px;height:48px;border-radius:14px;
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    margin:0 auto 20px;
     display:flex;align-items:center;justify-content:center;
-    color:var(--paper);
+    color:#fff;
     font-family:'Source Serif 4',serif;
     font-size:20px;
+    box-shadow:0 0 24px rgba(109,91,246,0.55);
   }
-  .login-card h1{font-size:22px;margin:0 0 4px;font-weight:600;}
-  .login-card p{color:var(--ink-soft);font-size:13.5px;margin:0 0 26px;}
+  .login-card h1{font-size:22px;margin:0 0 4px;font-weight:600;color:#fff;}
+  .login-card p{color:#A7ADC2;font-size:13.5px;margin:0 0 26px;}
   #pin-input{
     width:100%;
     text-align:center;
     letter-spacing:10px;
     font-size:24px;
     padding:14px 10px;
-    border:1.5px solid var(--line);
+    border:1.5px solid rgba(255,255,255,0.16);
     border-radius:10px;
-    background:var(--paper);
-    color:var(--ink);
+    background:rgba(255,255,255,0.06);
+    color:#fff;
     outline:none;
     margin-bottom:14px;
   }
-  #pin-input:focus{border-color:var(--sage);}
+  #pin-input::placeholder{color:#5C6480;}
+  #pin-input:focus{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(0,194,209,0.18);}
   .btn-primary{
     width:100%;
-    background:var(--ink);
-    color:var(--paper);
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    color:#fff;
     border:none;
     border-radius:10px;
     padding:13px;
     font-size:14.5px;
     font-weight:600;
     letter-spacing:.2px;
+    box-shadow:0 4px 16px rgba(109,91,246,0.35);
   }
-  .btn-primary:hover{background:#16211f;}
-  #login-error{color:var(--burgundy);font-size:13px;margin-top:12px;min-height:16px;}
+  .btn-primary:hover{filter:brightness(1.06);}
+  #login-error{color:#FF7A8E;font-size:13px;margin-top:12px;min-height:16px;}
+  #register-msg{color:#7FE8B8;font-size:13px;margin-top:10px;min-height:16px;}
+  .login-toggle{margin-top:20px;font-size:12.5px;color:#8C93AC;}
+  .login-toggle button{background:none;border:none;color:var(--accent2);font-weight:600;font-size:12.5px;padding:0;cursor:pointer;}
+  .login-toggle button:hover{text-decoration:underline;}
+  .reg-field{margin-bottom:12px;text-align:left;}
+  .reg-field label{display:block;font-size:11.5px;color:#9098B4;font-weight:600;margin-bottom:5px;}
+  .reg-field input, .reg-field select{
+    width:100%;padding:11px 12px;border:1.5px solid rgba(255,255,255,0.16);border-radius:9px;
+    background:rgba(255,255,255,0.06);color:#fff;font-size:13.5px;outline:none;
+  }
+  .reg-field input:focus, .reg-field select:focus{border-color:var(--accent2);}
+  .reg-field select option{background:#1A2333;color:#fff;}
 
   /* ---------- APP SHELL ---------- */
   #app{display:none;min-height:100vh;}
@@ -290,11 +329,44 @@
 <div id="login-screen">
   <div class="login-card">
     <div class="login-mark">JR</div>
-    <h1>Programación Laboral</h1>
-    <p>Ingresa tu código PIN para continuar</p>
-    <input id="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="••••">
-    <button class="btn-primary" id="login-btn">Ingresar</button>
-    <div id="login-error"></div>
+
+    <!-- Formulario de ingreso -->
+    <div id="login-form-block">
+      <h1>Programación Laboral</h1>
+      <p>Ingresa tu código PIN para continuar</p>
+      <input id="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="••••">
+      <button class="btn-primary" id="login-btn">Ingresar</button>
+      <div id="login-error"></div>
+      <div class="login-toggle">¿Aún no tienes cuenta? <button id="show-register-btn">Regístrate</button></div>
+    </div>
+
+    <!-- Formulario de registro -->
+    <div id="register-form-block" style="display:none;">
+      <h1>Crear cuenta</h1>
+      <p>Regístrate para usar la app</p>
+      <div class="reg-field">
+        <label>Nombre completo</label>
+        <input type="text" id="r-nombre" placeholder="Ej. Juan Pérez">
+      </div>
+      <div class="reg-field">
+        <label>Cargo</label>
+        <input type="text" id="r-cargo" placeholder="Ej. Coordinador Sede Norte">
+      </div>
+      <div class="reg-field">
+        <label>Rol</label>
+        <select id="r-rol">
+          <option>Coordinador</option>
+          <option>Director</option>
+        </select>
+      </div>
+      <div class="reg-field">
+        <label>Crea tu PIN (4 dígitos)</label>
+        <input type="password" id="r-pin" inputmode="numeric" maxlength="6" placeholder="••••">
+      </div>
+      <button class="btn-primary" id="register-btn">Crear cuenta</button>
+      <div id="register-msg"></div>
+      <div class="login-toggle">¿Ya tienes cuenta? <button id="show-login-btn">Inicia sesión</button></div>
+    </div>
   </div>
 </div>
 
@@ -493,6 +565,53 @@ async function doLogin(){
     $('#login-error').textContent = 'No se pudo conectar. Verifica la URL del API.';
   }
 }
+
+// ---------- TOGGLE LOGIN / REGISTRO ----------
+$('#show-register-btn').addEventListener('click', () => {
+  $('#login-form-block').style.display = 'none';
+  $('#register-form-block').style.display = 'block';
+});
+$('#show-login-btn').addEventListener('click', () => {
+  $('#register-form-block').style.display = 'none';
+  $('#login-form-block').style.display = 'block';
+});
+
+$('#register-btn').addEventListener('click', async () => {
+  const msg = $('#register-msg');
+  const nombre = $('#r-nombre').value.trim();
+  const cargo = $('#r-cargo').value.trim();
+  const rol = $('#r-rol').value;
+  const pin = $('#r-pin').value.trim();
+  if(!nombre || !cargo || !pin){
+    msg.style.color = '#FF7A8E';
+    msg.textContent = 'Completa todos los campos.';
+    return;
+  }
+  msg.style.color = '#A7ADC2';
+  msg.textContent = 'Creando cuenta...';
+  try{
+    const r = await apiPost('crearUsuario', {nombre, cargo, rol, pin});
+    if(r.ok){
+      msg.style.color = '#7FE8B8';
+      msg.textContent = 'Cuenta creada. Ingresando...';
+      const loginR = await api('login', {pin});
+      if(loginR.ok){
+        currentUser = loginR.usuario;
+        sessionStorage.setItem('jr_user', JSON.stringify(currentUser));
+        enterApp();
+      }else{
+        $('#register-form-block').style.display = 'none';
+        $('#login-form-block').style.display = 'block';
+      }
+    }else{
+      msg.style.color = '#FF7A8E';
+      msg.textContent = r.error || 'No se pudo crear la cuenta.';
+    }
+  }catch(err){
+    msg.style.color = '#FF7A8E';
+    msg.textContent = 'No se pudo conectar con el servidor.';
+  }
+});
 
 $('#logout-btn').addEventListener('click', () => {
   currentUser = null;
