@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programación Laboral · Jardines del Renacer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1D2B30;
+    --ink-soft:#57676C;
+    --ink-faint:#8C989B;
+    --paper:#F5F3EE;
+    --paper-card:#FFFFFF;
+    --line:#E3DFD4;
+    --line-soft:#ECE9E0;
+    --gold:#A9803F;
+    --gold-bg:#F2E9D6;
+    --sage:#5F7F72;
+    --sage-bg:#E7EEE9;
+    --amber:#B98A3C;
+    --amber-bg:#F5EBD8;
+    --burgundy:#8C4550;
+    --burgundy-bg:#F3E4E5;
+    --violet:#6C5F92;
+    --violet-bg:#EBE8F1;
+    --slate:#7C8A8D;
+    --slate-bg:#EBEEEC;
+    --radius:10px;
+    --shadow: 0 1px 2px rgba(29,43,48,0.05), 0 6px 18px rgba(29,43,48,0.06);
+    --shadow-lg: 0 10px 30px rgba(29,43,48,0.14), 0 2px 8px rgba(29,43,48,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif{font-family:'Source Serif 4',serif;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+  svg{display:block;}
+
+  /* ---------- LOGIN ---------- */
+  #login-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:
+      radial-gradient(720px 420px at 15% 10%, rgba(169,128,63,0.07), transparent 60%),
+      radial-gradient(600px 500px at 90% 90%, rgba(95,127,114,0.08), transparent 60%),
+      var(--paper);
+  }
+  .login-card{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:44px 38px 36px;
+    width:100%;
+    max-width:372px;
+    box-shadow:var(--shadow-lg);
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .login-card::before{
+    content:'';
+    position:absolute;top:0;left:0;right:0;height:4px;
+    background:linear-gradient(90deg,var(--sage),var(--gold));
+  }
+  .login-mark{
+    width:48px;height:48px;border-radius:50%;
+    background:var(--ink);
+    margin:6px auto 20px;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--paper);
+    font-family:'Source Serif 4',serif;
+    font-size:19px;
+    letter-spacing:.5px;
+  }
+  .login-card .company{
+    font-size:10.5px;
+    font-weight:600;
+    letter-spacing:1.6px;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:8px;
+  }
+  .login-card h1{font-size:21px;margin:0 0 4px;font-weight:600;letter-spacing:-.2px;}
+  .login-card p{color:var(--ink-soft);font-size:13.5px;margin:0 0 28px;}
+  #pin-input{
+    width:100%;
+    text-align:center;
+    letter-spacing:10px;
+    font-size:24px;
+    padding:14px 10px;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+    margin-bottom:14px;
+    transition:border-color .15s ease;
+  }
+  #pin-input:focus{border-color:var(--sage);}
+  .btn-primary{
+    width:100%;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:10px;
+    padding:13px;
+    font-size:14px;
+    font-weight:600;
+    letter-spacing:.3px;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .btn-primary:hover{background:#0F1B1F;}
+  .btn-primary:active{transform:scale(.99);}
+  #login-error{color:var(--burgundy);font-size:13px;margin-top:12px;min-height:16px;font-weight:500;}
+  .login-foot{
+    margin-top:26px;padding-top:18px;border-top:1px solid var(--line-soft);
+    font-size:11px;color:var(--ink-faint);letter-spacing:.3px;
+  }
+
+  /* ---------- APP SHELL ---------- */
+  #app{display:none;min-height:100vh;}
+  header.topbar{
+    background:var(--paper-card);
+    border-bottom:1px solid var(--line);
+    padding:14px 22px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;top:0;z-index:10;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:32px;height:32px;border-radius:8px;background:var(--ink);
+    color:var(--paper);display:flex;align-items:center;justify-content:center;
+    font-family:'Source Serif 4',serif;font-size:14px;font-weight:600;
+  }
+  .brand-name{
+    font-family:'Source Serif 4',serif;font-weight:600;font-size:15px;line-height:1.15;
+  }
+  .brand-sub{font-size:10px;color:var(--ink-faint);letter-spacing:1.2px;text-transform:uppercase;}
+  .topbar-id{display:flex;align-items:center;gap:12px;}
+  .divider-v{width:1px;height:30px;background:var(--line);margin:0 4px;}
+  .avatar{
+    width:36px;height:36px;border-radius:50%;
+    background:var(--sage-bg);color:var(--sage);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Source Serif 4',serif;font-weight:600;
+  }
+  .topbar-id .name{font-weight:600;font-size:14px;line-height:1.2;}
+  .topbar-id .role{font-size:11.5px;color:var(--ink-soft);}
+  #logout-btn{
+    background:none;border:1px solid var(--line);border-radius:8px;
+    padding:8px 12px;font-size:12.5px;color:var(--ink-soft);font-weight:500;
+    display:flex;align-items:center;gap:6px;transition:all .15s ease;
+  }
+  #logout-btn:hover{border-color:var(--slate);color:var(--ink);background:var(--paper);}
+
+  nav.tabs{
+    display:flex;gap:2px;padding:0 20px;background:var(--paper-card);
+    border-bottom:1px solid var(--line);overflow-x:auto;
+  }
+  nav.tabs button{
+    background:none;border:none;padding:13px 15px;font-size:13px;
+    font-weight:500;color:var(--ink-soft);border-bottom:2px solid transparent;
+    white-space:nowrap;letter-spacing:.1px;transition:color .15s ease;
+  }
+  nav.tabs button:hover{color:var(--ink);}
+  nav.tabs button.active{color:var(--ink);border-bottom-color:var(--gold);font-weight:600;}
+
+  main{padding:22px 20px 60px;max-width:760px;margin:0 auto;}
+
+  .alert-banner{
+    background:var(--burgundy-bg);
+    color:var(--burgundy);
+    border:1px solid #dfc3c6;
+    border-radius:10px;
+    padding:13px 16px;
+    font-size:13.5px;
+    margin-bottom:18px;
+    display:flex;
+    gap:11px;
+    align-items:flex-start;
+  }
+  .alert-banner svg{flex-shrink:0;margin-top:1px;}
+  .alert-banner strong{display:block;font-size:13px;margin-bottom:2px;font-weight:700;}
+
+  .section-title{
+    display:flex;align-items:baseline;justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .section-title h2{font-size:19px;margin:0;font-weight:600;letter-spacing:-.2px;}
+  .section-title .sub{font-size:12px;color:var(--ink-soft);font-weight:500;}
+
+  /* ---------- TASK CARD ---------- */
+  .task-card{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-left:4px solid var(--slate);
+    border-radius:10px;
+    padding:14px 14px 14px 16px;
+    margin-bottom:10px;
+    display:flex;
+    gap:14px;
+    align-items:center;
+    box-shadow:var(--shadow);
+    transition:box-shadow .15s ease, border-color .15s ease;
+  }
+  .task-card:hover{box-shadow:0 2px 4px rgba(29,43,48,0.06), 0 10px 22px rgba(29,43,48,0.08);}
+  .task-card.tipo-Trabajo{border-left-color:var(--sage);}
+  .task-card.tipo-Reunión{border-left-color:var(--violet);}
+  .task-card.tipo-Correo{border-left-color:var(--amber);}
+  .task-card.tipo-Almuerzo{border-left-color:var(--slate);}
+  .task-card.tipo-Fuera\ de\ oficina{border-left-color:var(--burgundy);}
+
+  .task-time{
+    font-size:12px;color:var(--ink-soft);min-width:74px;font-variant-numeric:tabular-nums;
+    font-weight:500;line-height:1.5;
+  }
+  .task-body{flex:1;min-width:0;}
+  .task-body .act{font-size:14.5px;font-weight:600;margin-bottom:4px;letter-spacing:-.1px;}
+  .task-body .notas{font-size:12px;color:var(--ink-soft);margin:2px 0 6px;}
+  .task-meta{display:flex;gap:6px;flex-wrap:wrap;}
+  .badge{
+    font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;
+    text-transform:uppercase;letter-spacing:.4px;
+  }
+  .badge.pri-Alto{background:var(--burgundy-bg);color:var(--burgundy);}
+  .badge.pri-Medio{background:var(--amber-bg);color:var(--amber);}
+  .badge.pri-Bajo{background:var(--slate-bg);color:var(--slate);}
+
+  .task-actions{display:flex;flex-direction:column;gap:6px;align-items:stretch;}
+  .status-btn{
+    border:none;border-radius:8px;padding:8px 12px;font-size:11.5px;font-weight:700;
+    white-space:nowrap;letter-spacing:.2px;transition:filter .15s ease;
+  }
+  .status-btn:hover{filter:brightness(0.95);}
+  .status-btn.st-Sin-iniciar{background:var(--slate-bg);color:var(--slate);}
+  .status-btn.st-En-curso{background:var(--amber-bg);color:var(--amber);}
+  .status-btn.st-Completado{background:var(--sage-bg);color:var(--sage);}
+  .status-btn.st-Pendiente{background:var(--burgundy-bg);color:var(--burgundy);}
+
+  .icon-row{display:flex;gap:4px;justify-content:flex-end;}
+  .icon-btn{
+    width:28px;height:28px;border-radius:7px;border:1px solid var(--line);
+    background:var(--paper-card);color:var(--ink-faint);
+    display:flex;align-items:center;justify-content:center;
+    transition:all .15s ease;
+  }
+  .icon-btn:hover{border-color:var(--slate);color:var(--ink);background:var(--paper);}
+  .icon-btn.danger:hover{border-color:var(--burgundy);color:var(--burgundy);background:var(--burgundy-bg);}
+
+  .empty-state{
+    text-align:center;padding:54px 20px;color:var(--ink-soft);
+  }
+  .empty-state .mark{
+    width:40px;height:40px;border-radius:50%;background:var(--sage-bg);color:var(--sage);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 12px;
+  }
+  .empty-state .msg{font-size:13.5px;font-weight:500;}
+
+  /* ---------- WEEK VIEW ---------- */
+  .day-group{margin-bottom:24px;}
+  .day-group h3{
+    font-size:12.5px;margin:0 0 10px;color:var(--ink-soft);font-weight:700;
+    text-transform:uppercase;letter-spacing:.6px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .day-group h3::after{content:'';flex:1;height:1px;background:var(--line);}
+
+  /* ---------- DASHBOARD ---------- */
+  .team-card{
+    background:var(--paper-card);border:1px solid var(--line);border-radius:10px;
+    padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow);
+  }
+  .team-card .row1{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .team-card .row1 .n{font-weight:600;font-size:14.5px;letter-spacing:-.1px;}
+  .team-card .row1 .c{font-size:11.5px;color:var(--ink-soft);}
+  .team-card .pct{font-family:'Source Serif 4',serif;font-size:21px;font-weight:600;color:var(--sage);}
+  .bar-track{background:var(--line-soft);border-radius:20px;height:6px;overflow:hidden;margin-bottom:10px;}
+  .bar-fill{background:linear-gradient(90deg,var(--sage),#4f6f63);height:100%;border-radius:20px;transition:width .4s ease;}
+  .team-stats{display:flex;gap:16px;font-size:11px;color:var(--ink-soft);font-weight:500;}
+  .team-stats span{display:flex;align-items:center;gap:5px;}
+  .dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+
+  /* ---------- FORM ---------- */
+  form.new-task{
+    background:var(--paper-card);border:1px solid var(--line);border-radius:12px;
+    padding:22px;box-shadow:var(--shadow);
+  }
+  .form-row{margin-bottom:15px;}
+  .form-row label{
+    display:block;font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:7px;
+    text-transform:uppercase;letter-spacing:.5px;
+  }
+  .form-row input, .form-row select, .form-row textarea{
+    width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;
+    background:var(--paper);font-size:14px;color:var(--ink);outline:none;
+    transition:border-color .15s ease;
+  }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus{border-color:var(--sage);}
+  .form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  #task-msg{font-size:13px;margin-top:12px;min-height:16px;font-weight:500;}
+  #task-msg.ok{color:var(--sage);}
+  #task-msg.err{color:var(--burgundy);}
+  .form-actions{display:flex;gap:10px;}
+  .btn-secondary{
+    background:var(--paper);color:var(--ink-soft);border:1.5px solid var(--line);
+    border-radius:10px;padding:13px;font-size:14px;font-weight:600;flex:1;
+    transition:all .15s ease;
+  }
+  .btn-secondary:hover{border-color:var(--slate);color:var(--ink);}
+  .form-actions .btn-primary{flex:1.4;}
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(29,43,48,0.45);
+    align-items:center;justify-content:center;padding:20px;z-index:100;
+    backdrop-filter:blur(2px);
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:var(--paper-card);border-radius:14px;max-width:420px;width:100%;
+    box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;
+  }
+  .modal-head{
+    padding:20px 22px 4px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .modal-head h3{font-size:17px;margin:0;font-weight:600;}
+  .modal-close{
+    width:28px;height:28px;border-radius:50%;border:none;background:var(--paper);
+    color:var(--ink-soft);display:flex;align-items:center;justify-content:center;
+  }
+  .modal-close:hover{background:var(--line-soft);color:var(--ink);}
+  .modal-body{padding:14px 22px 22px;}
+  .modal-body p{font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin:0 0 18px;}
+  .modal-body .task-name{color:var(--ink);font-weight:600;}
+
+  @media (max-width:480px){
+    .task-card{flex-wrap:wrap;}
+    .task-actions{flex-direction:row;width:100%;}
+    .status-btn{flex:1;}
+    .form-actions{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-mark">JR</div>
+    <div class="company">Jardines del Renacer</div>
+    <h1>Programación Laboral</h1>
+    <p>Ingresa tu código PIN para continuar</p>
+    <input id="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="••••">
+    <button class="btn-primary" id="login-btn">Ingresar</button>
+    <div id="login-error"></div>
+    <div class="login-foot">Acceso exclusivo para personal autorizado</div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">JR</div>
+      <div>
+        <div class="brand-name">Jardines del Renacer</div>
+        <div class="brand-sub">Programación laboral</div>
+      </div>
+    </div>
+    <div class="topbar-id">
+      <div class="divider-v"></div>
+      <div class="avatar" id="avatar-initial">–</div>
+      <div>
+        <div class="name" id="user-name">—</div>
+        <div class="role" id="user-role">—</div>
+      </div>
+      <button id="logout-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Salir
+      </button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="dia" class="active">Mi día</button>
+    <button data-tab="semana">Mi semana</button>
+    <button data-tab="equipo">Equipo</button>
+    <button data-tab="nueva">Nueva tarea</button>
+  </nav>
+
+  <main>
+    <div id="banner-slot"></div>
+
+    <!-- MI DIA -->
+    <section id="tab-dia">
+      <div class="section-title">
+        <h2>Mi día</h2>
+        <span class="sub" id="today-label"></span>
+      </div>
+      <div id="dia-list"></div>
+    </section>
+
+    <!-- MI SEMANA -->
+    <section id="tab-semana" style="display:none;">
+      <div class="section-title">
+        <h2>Mi semana</h2>
+        <span class="sub" id="week-range"></span>
+      </div>
+      <div id="semana-list"></div>
+    </section>
+
+    <!-- EQUIPO -->
+    <section id="tab-equipo" style="display:none;">
+      <div class="section-title">
+        <h2>Equipo</h2>
+        <span class="sub">Cumplimiento semana actual</span>
+      </div>
+      <div id="equipo-list"></div>
+    </section>
+
+    <!-- NUEVA TAREA -->
+    <section id="tab-nueva" style="display:none;">
+      <div class="section-title"><h2>Nueva tarea</h2></div>
+      <form class="new-task" id="new-task-form">
+        <div class="form-row">
+          <label>Actividad</label>
+          <input type="text" id="f-actividad" required placeholder="Ej. Revisión de PQR">
+        </div>
+        <div class="form-row">
+          <label>Fecha</label>
+          <input type="date" id="f-fecha" required>
+        </div>
+        <div class="form-grid2">
+          <div class="form-row">
+            <label>Hora inicio</label>
+            <input type="time" id="f-inicio" required>
+          </div>
+          <div class="form-row">
+            <label>Hora fin</label>
+            <input type="time" id="f-fin" required>
+          </div>
+        </div>
+        <div class="form-grid2">
+          <div class="form-row">
+            <label>Tipo</label>
+            <select id="f-tipo">
+              <option>Trabajo</option>
+              <option>Reunión</option>
+              <option>Correo</option>
+              <option>Almuerzo</option>
+              <option>Fuera de oficina</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Prioridad</label>
+            <select id="f-prioridad">
+              <option>Medio</option>
+              <option>Alto</option>
+              <option>Bajo</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Notas (opcional)</label>
+          <textarea id="f-notas" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Guardar tarea</button>
+        <div id="task-msg"></div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<!-- ================= MODAL: EDITAR TAREA ================= -->
+<div class="modal-overlay" id="edit-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Editar tarea</h3>
+      <button class="modal-close" id="edit-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="edit-task-form">
+        <input type="hidden" id="e-id">
+        <div class="form-row">
+          <label>Actividad</label>
+          <input type="text" id="e-actividad" required>
+        </div>
+        <div class="form-row">
+          <label>Fecha</label>
+          <input type="date" id="e-fecha" required>
+        </div>
+        <div class="form-grid2">
+          <div class="form-row">
+            <label>Hora inicio</label>
+            <input type="time" id="e-inicio" required>
+          </div>
+          <div class="form-row">
+            <label>Hora fin</label>
+            <input type="time" id="e-fin" required>
+          </div>
+        </div>
+        <div class="form-grid2">
+          <div class="form-row">
+            <label>Tipo</label>
+            <select id="e-tipo">
+              <option>Trabajo</option>
+              <option>Reunión</option>
+              <option>Correo</option>
+              <option>Almuerzo</option>
+              <option>Fuera de oficina</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Prioridad</label>
+            <select id="e-prioridad">
+              <option>Medio</option>
+              <option>Alto</option>
+              <option>Bajo</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Notas (opcional)</label>
+          <textarea id="e-notas" rows="2"></textarea>
+        </div>
+        <div id="edit-msg" style="font-size:13px;margin-bottom:12px;min-height:16px;font-weight:500;"></div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="edit-cancel">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: CONFIRMAR ELIMINAR ================= -->
+<div class="modal-overlay" id="delete-overlay">
+  <div class="modal-box" style="max-width:360px;">
+    <div class="modal-head">
+      <h3>Eliminar tarea</h3>
+      <button class="modal-close" id="delete-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>¿Seguro que deseas eliminar <span class="task-name" id="delete-task-name"></span>? Esta acción no se puede deshacer.</p>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" id="delete-cancel">Cancelar</button>
+        <button type="button" class="btn-primary" id="delete-confirm" style="background:var(--burgundy);">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONFIGURA ESTA URL con la de tu implementación de Apps Script
+   ========================================================= */
+const API_URL = 'PEGA_AQUI_LA_URL_DE_TU_WEB_APP';
+
+let currentUser = null;
+let cachedTareas = [];
+let activeTab = 'dia';
+let taskToDelete = null;
+
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+// ---------- ICONOS ----------
+const ICON_EDIT = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+const ICON_TRASH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+const ICON_CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+const ICON_WARN = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+
+// ---------- FECHAS ----------
+function pad(n){return String(n).padStart(2,'0');}
+function toISO(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
+function startOfWeek(d){
+  const day = d.getDay(); // 0=domingo
+  const diff = (day === 0 ? -6 : 1) - day;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + diff);
+  return monday;
+}
+const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+// ---------- API ----------
+async function api(action, params={}){
+  const url = new URL(API_URL);
+  url.searchParams.set('action', action);
+  Object.keys(params).forEach(k => params[k] != null && url.searchParams.set(k, params[k]));
+  const res = await fetch(url);
+  return res.json();
+}
+async function apiPost(action, body={}){
+  const res = await fetch(API_URL, {
+    method:'POST',
+    body: JSON.stringify({action, ...body})
+  });
+  return res.json();
+}
+
+// ---------- LOGIN ----------
+$('#login-btn').addEventListener('click', doLogin);
+$('#pin-input').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+async function doLogin(){
+  const pin = $('#pin-input').value.trim();
+  if(!pin){ return; }
+  $('#login-error').textContent = '';
+  try{
+    const r = await api('login', {pin});
+    if(!r.ok){
+      $('#login-error').textContent = r.error || 'PIN incorrecto';
+      return;
+    }
+    currentUser = r.usuario;
+    sessionStorage.setItem('jr_user', JSON.stringify(currentUser));
+    enterApp();
+  }catch(err){
+    $('#login-error').textContent = 'No se pudo conectar. Verifica la URL del API.';
+  }
+}
+
+$('#logout-btn').addEventListener('click', () => {
+  currentUser = null;
+  sessionStorage.removeItem('jr_user');
+  $('#app').style.display='none';
+  $('#login-screen').style.display='flex';
+  $('#pin-input').value='';
+});
+
+function enterApp(){
+  $('#login-screen').style.display='none';
+  $('#app').style.display='block';
+  $('#user-name').textContent = currentUser.nombre;
+  $('#user-role').textContent = currentUser.cargo;
+  $('#avatar-initial').textContent = currentUser.nombre.charAt(0).toUpperCase();
+  loadDia();
+}
+
+// ---------- TABS ----------
+$$('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', () => {
+    $$('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTab = btn.dataset.tab;
+    ['dia','semana','equipo','nueva'].forEach(t=>{
+      $('#tab-'+t).style.display = (t===btn.dataset.tab) ? 'block' : 'none';
+    });
+    if(btn.dataset.tab==='dia') loadDia();
+    if(btn.dataset.tab==='semana') loadSemana();
+    if(btn.dataset.tab==='equipo') loadEquipo();
+  });
+});
+
+function reloadActiveTab(){
+  if(activeTab==='dia') loadDia();
+  if(activeTab==='semana') loadSemana();
+  if(activeTab==='equipo') loadEquipo();
+}
+
+// ---------- BANNER DE VENCIDAS ----------
+function renderBanner(tareas){
+  const now = new Date();
+  const hhmm = pad(now.getHours())+':'+pad(now.getMinutes());
+  const today = toISO(now);
+  const vencidas = tareas.filter(t =>
+    t.usuarioId == currentUser.id &&
+    t.fecha === today &&
+    t.horaFin < hhmm &&
+    t.estado !== 'Completado'
+  );
+  const slot = $('#banner-slot');
+  if(vencidas.length === 0){ slot.innerHTML=''; return; }
+  slot.innerHTML = `<div class="alert-banner">${ICON_WARN}
+    <div><strong>${vencidas.length} tarea(s) vencida(s) sin completar hoy</strong>
+    ${vencidas.map(t=>escapeHtml(t.actividad)).join(', ')}</div>
+  </div>`;
+}
+
+// ---------- MI DIA ----------
+async function loadDia(){
+  const today = toISO(new Date());
+  $('#today-label').textContent = DIAS[new Date().getDay()] + ', ' + today;
+  const tareas = await api('getTareas', {usuarioId: currentUser.id, desde: today, hasta: today});
+  cachedTareas = tareas;
+  renderBanner(tareas);
+  const list = $('#dia-list');
+  if(tareas.length === 0){
+    list.innerHTML = emptyState('Sin tareas programadas para hoy');
+    return;
+  }
+  tareas.sort((a,b)=> a.horaInicio.localeCompare(b.horaInicio));
+  list.innerHTML = tareas.map(taskCard).join('');
+  bindCardActions(list, tareas, reloadActiveTab);
+}
+
+function emptyState(msg){
+  return `<div class="empty-state"><div class="mark">${ICON_CHECK}</div><div class="msg">${msg}</div></div>`;
+}
+
+function taskCard(t){
+  const nextEstado = {
+    'Sin iniciar':'En curso', 'En curso':'Completado', 'Completado':'Pendiente', 'Pendiente':'Sin iniciar'
+  }[t.estado] || 'Sin iniciar';
+  const tipoClass = 'tipo-' + t.tipo.replace(' ', '\\ ');
+  return `
+  <div class="task-card ${tipoClass}" data-id="${t.id}">
+    <div class="task-time">${t.horaInicio}<br>${t.horaFin}</div>
+    <div class="task-body">
+      <div class="act">${escapeHtml(t.actividad)}</div>
+      ${t.notas ? `<div class="notas">${escapeHtml(t.notas)}</div>` : ''}
+      <div class="task-meta">
+        <span class="badge pri-${t.prioridad}">${t.prioridad}</span>
+        <span class="badge" style="background:var(--slate-bg);color:var(--slate);">${t.tipo}</span>
+      </div>
+    </div>
+    <div class="task-actions">
+      <button class="status-btn st-${t.estado.replace(' ','-')}" data-action="estado" data-id="${t.id}" data-next="${nextEstado}">${t.estado}</button>
+      <div class="icon-row">
+        <button class="icon-btn" data-action="editar" data-id="${t.id}" title="Editar">${ICON_EDIT}</button>
+        <button class="icon-btn danger" data-action="eliminar" data-id="${t.id}" title="Eliminar">${ICON_TRASH}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindCardActions(container, tareas, reload){
+  container.querySelectorAll('[data-action="estado"]').forEach(btn=>{
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const next = btn.dataset.next;
+      btn.disabled = true;
+      await apiPost('actualizarEstado', {id, estado: next});
+      reload();
+    });
+  });
+  container.querySelectorAll('[data-action="editar"]').forEach(btn=>{
+    btn.addEventListener('click', () => {
+      const t = tareas.find(x => String(x.id) === String(btn.dataset.id));
+      if(t) openEditModal(t, reload);
+    });
+  });
+  container.querySelectorAll('[data-action="eliminar"]').forEach(btn=>{
+    btn.addEventListener('click', () => {
+      const t = tareas.find(x => String(x.id) === String(btn.dataset.id));
+      if(t) openDeleteModal(t, reload);
+    });
+  });
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ---------- MI SEMANA ----------
+async function loadSemana(){
+  const monday = startOfWeek(new Date());
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  $('#week-range').textContent = `${toISO(monday)} — ${toISO(sunday)}`;
+  const tareas = await api('getTareas', {usuarioId: currentUser.id, desde: toISO(monday), hasta: toISO(sunday)});
+
+  const byDay = {};
+  for(let i=0;i<7;i++){
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
+    byDay[toISO(d)] = [];
+  }
+  tareas.forEach(t => { if(byDay[t.fecha]) byDay[t.fecha].push(t); });
+
+  const list = $('#semana-list');
+  list.innerHTML = Object.keys(byDay).map(fecha=>{
+    const dow = DIAS[new Date(fecha+'T00:00:00').getDay()];
+    const items = byDay[fecha].sort((a,b)=>a.horaInicio.localeCompare(b.horaInicio));
+    return `<div class="day-group">
+      <h3>${dow} · ${fecha}</h3>
+      ${items.length ? items.map(taskCard).join('') : emptyState('Sin tareas')}
+    </div>`;
+  }).join('');
+  bindCardActions(list, tareas, loadSemana);
+}
+
+// ---------- EQUIPO ----------
+async function loadEquipo(){
+  const monday = startOfWeek(new Date());
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  const data = await api('getDashboard', {desde: toISO(monday), hasta: toISO(sunday)});
+  const list = $('#equipo-list');
+  if(data.length === 0){ list.innerHTML = emptyState('Sin datos de equipo aún'); return; }
+  list.innerHTML = data.map(u => `
+    <div class="team-card">
+      <div class="row1">
+        <div>
+          <div class="n">${escapeHtml(u.nombre)}</div>
+          <div class="c">${escapeHtml(u.cargo)}</div>
+        </div>
+        <div class="pct">${u.porcentaje}%</div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${u.porcentaje}%"></div></div>
+      <div class="team-stats">
+        <span><span class="dot" style="background:var(--sage);"></span>${u.completadas} completadas</span>
+        <span><span class="dot" style="background:var(--amber);"></span>${u.enCurso} en curso</span>
+        <span><span class="dot" style="background:var(--burgundy);"></span>${u.pendientes} pendientes</span>
+        <span><span class="dot" style="background:var(--slate);"></span>${u.sinIniciar} sin iniciar</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---------- NUEVA TAREA ----------
+$('#f-fecha').value = toISO(new Date());
+
+$('#new-task-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = $('#task-msg');
+  msg.textContent = 'Guardando...'; msg.className='';
+  const body = {
+    usuarioId: currentUser.id,
+    fecha: $('#f-fecha').value,
+    horaInicio: $('#f-inicio').value,
+    horaFin: $('#f-fin').value,
+    actividad: $('#f-actividad').value,
+    tipo: $('#f-tipo').value,
+    prioridad: $('#f-prioridad').value,
+    estado: 'Sin iniciar',
+    notas: $('#f-notas').value
+  };
+  try{
+    const r = await apiPost('crearTarea', body);
+    if(r.ok){
+      msg.textContent = 'Tarea guardada.'; msg.className='ok';
+      $('#new-task-form').reset();
+      $('#f-fecha').value = toISO(new Date());
+    }else{
+      msg.textContent = r.error || 'Error al guardar'; msg.className='err';
+    }
+  }catch(err){
+    msg.textContent = 'No se pudo conectar con el servidor.'; msg.className='err';
+  }
+});
+
+// ---------- MODAL: EDITAR ----------
+function openEditModal(t, reload){
+  $('#e-id').value = t.id;
+  $('#e-actividad').value = t.actividad;
+  $('#e-fecha').value = t.fecha;
+  $('#e-inicio').value = t.horaInicio;
+  $('#e-fin').value = t.horaFin;
+  $('#e-tipo').value = t.tipo;
+  $('#e-prioridad').value = t.prioridad;
+  $('#e-notas').value = t.notas || '';
+  $('#edit-msg').textContent = '';
+  $('#edit-msg').className = '';
+  $('#edit-overlay').classList.add('open');
+  $('#edit-task-form').dataset.reload = '';
+  $('#edit-task-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const msg = $('#edit-msg');
+    msg.textContent = 'Guardando...'; msg.className='';
+    try{
+      const r = await apiPost('editarTarea', {
+        id: $('#e-id').value,
+        actividad: $('#e-actividad').value,
+        fecha: $('#e-fecha').value,
+        horaInicio: $('#e-inicio').value,
+        horaFin: $('#e-fin').value,
+        tipo: $('#e-tipo').value,
+        prioridad: $('#e-prioridad').value,
+        notas: $('#e-notas').value
+      });
+      if(r.ok){
+        $('#edit-overlay').classList.remove('open');
+        reload();
+      }else{
+        msg.textContent = r.error || 'Error al guardar'; msg.className='err';
+      }
+    }catch(err){
+      msg.textContent = 'No se pudo conectar con el servidor.'; msg.className='err';
+    }
+  };
+}
+$('#edit-close').addEventListener('click', () => $('#edit-overlay').classList.remove('open'));
+$('#edit-cancel').addEventListener('click', () => $('#edit-overlay').classList.remove('open'));
+$('#edit-overlay').addEventListener('click', (e) => { if(e.target === $('#edit-overlay')) $('#edit-overlay').classList.remove('open'); });
+
+// ---------- MODAL: ELIMINAR ----------
+function openDeleteModal(t, reload){
+  taskToDelete = t;
+  $('#delete-task-name').textContent = `"${t.actividad}"`;
+  $('#delete-overlay').classList.add('open');
+  $('#delete-confirm').onclick = async () => {
+    if(!taskToDelete) return;
+    $('#delete-confirm').disabled = true;
+    await apiPost('eliminarTarea', {id: taskToDelete.id});
+    $('#delete-confirm').disabled = false;
+    $('#delete-overlay').classList.remove('open');
+    taskToDelete = null;
+    reload();
+  };
+}
+$('#delete-close').addEventListener('click', () => { $('#delete-overlay').classList.remove('open'); taskToDelete=null; });
+$('#delete-cancel').addEventListener('click', () => { $('#delete-overlay').classList.remove('open'); taskToDelete=null; });
+$('#delete-overlay').addEventListener('click', (e) => { if(e.target === $('#delete-overlay')){ $('#delete-overlay').classList.remove('open'); taskToDelete=null; } });
+
+// ---------- SESIÓN PERSISTENTE ----------
+(function initSession(){
+  const saved = sessionStorage.getItem('jr_user');
+  if(saved){
+    currentUser = JSON.parse(saved);
+    enterApp();
+  }
+})();
+</script>
+</body>
+</html>
