@@ -24,9 +24,9 @@
     --burgundy-bg:#FCE1E7;
     --slate:#6C7A89;
     --slate-bg:#E9EDF2;
-    --accent:#6D5BF6;
-    --accent2:#00C2D1;
-    --accent-bg:#EDEAFE;
+    --accent:#1D63ED;
+    --accent2:#3FC5F0;
+    --accent-bg:#E8F1FE;
     --radius:10px;
     --shadow: 0 1px 2px rgba(26,35,51,0.06), 0 4px 14px rgba(26,35,51,0.06);
   }
@@ -50,10 +50,10 @@
     justify-content:center;
     padding:24px;
     background:
-      radial-gradient(circle at 15% 20%, rgba(109,91,246,0.35), transparent 45%),
-      radial-gradient(circle at 85% 75%, rgba(0,194,209,0.30), transparent 50%),
-      radial-gradient(circle at 50% 100%, rgba(229,64,94,0.12), transparent 50%),
-      #0B0F1C;
+      radial-gradient(circle at 15% 20%, rgba(29,99,237,0.40), transparent 45%),
+      radial-gradient(circle at 85% 75%, rgba(63,197,240,0.32), transparent 50%),
+      radial-gradient(circle at 50% 100%, rgba(29,99,237,0.14), transparent 50%),
+      #0A1220;
     position:relative;
     overflow:hidden;
   }
@@ -77,7 +77,7 @@
     padding:42px 36px;
     width:100%;
     max-width:380px;
-    box-shadow:0 0 0 1px rgba(255,255,255,0.02), 0 20px 60px rgba(0,0,0,0.45), 0 0 80px rgba(109,91,246,0.15);
+    box-shadow:0 0 0 1px rgba(255,255,255,0.02), 0 20px 60px rgba(0,0,0,0.45), 0 0 80px rgba(29,99,237,0.20);
     text-align:center;
     color:#F2F3F8;
   }
@@ -89,7 +89,7 @@
     color:#fff;
     font-family:'Source Serif 4',serif;
     font-size:20px;
-    box-shadow:0 0 24px rgba(109,91,246,0.55);
+    box-shadow:0 0 24px rgba(29,99,237,0.55);
   }
   .login-card h1{font-size:22px;margin:0 0 4px;font-weight:600;color:#fff;}
   .login-card p{color:#A7ADC2;font-size:13.5px;margin:0 0 26px;}
@@ -118,7 +118,7 @@
     font-size:14.5px;
     font-weight:600;
     letter-spacing:.2px;
-    box-shadow:0 4px 16px rgba(109,91,246,0.35);
+    box-shadow:0 4px 16px rgba(29,99,237,0.35);
   }
   .btn-primary:hover{filter:brightness(1.06);}
   #login-error{color:#FF7A8E;font-size:13px;margin-top:12px;min-height:16px;}
@@ -357,6 +357,7 @@
         <select id="r-rol">
           <option>Coordinador</option>
           <option>Director</option>
+          <option>Analista de Calidad</option>
         </select>
       </div>
       <div class="reg-field">
@@ -441,7 +442,7 @@
           <div><label>Cargo</label><input type="text" id="a-cargo" required></div>
           <div><label>PIN (4 dígitos)</label><input type="text" id="a-pin" maxlength="6" required></div>
           <div><label>Rol</label>
-            <select id="a-rol"><option>Coordinador</option><option>Director</option></select>
+            <select id="a-rol"><option>Coordinador</option><option>Director</option><option>Analista de Calidad</option></select>
           </div>
         </div>
         <button type="submit" class="btn-primary">Agregar</button>
@@ -897,6 +898,7 @@ async function loadAdmin(){
           <select class="a-rol">
             <option ${u.rol==='Coordinador'?'selected':''}>Coordinador</option>
             <option ${u.rol==='Director'?'selected':''}>Director</option>
+            <option ${u.rol==='Analista de Calidad'?'selected':''}>Analista de Calidad</option>
           </select>
         </div>
       </div>
