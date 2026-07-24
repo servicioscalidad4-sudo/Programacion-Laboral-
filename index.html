@@ -272,6 +272,18 @@
   }
   .form-row input:focus, .form-row select:focus, .form-row textarea:focus{border-color:var(--sage);}
   .form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .days-check{display:flex;gap:6px;flex-wrap:wrap;}
+  .days-check label{
+    display:flex;align-items:center;gap:5px;
+    border:1.5px solid var(--line);border-radius:20px;
+    padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    cursor:pointer;background:var(--paper);user-select:none;
+  }
+  .days-check input{accent-color:var(--accent);width:14px;height:14px;margin:0;}
+  .days-check label:has(input:checked){
+    background:var(--accent-bg);border-color:var(--accent);color:var(--accent);
+  }
+  .days-hint{font-size:11.5px;color:var(--ink-soft);margin-top:8px;}
   #task-msg{font-size:13px;margin-top:10px;min-height:16px;}
   #task-msg.ok{color:var(--sage);}
   #task-msg.err{color:var(--burgundy);}
@@ -461,6 +473,19 @@
         <div class="form-row">
           <label>Fecha</label>
           <input type="date" id="f-fecha" required>
+        </div>
+        <div class="form-row" id="repeat-row">
+          <label>Repetir esta tarea en (misma semana)</label>
+          <div class="days-check">
+            <label><input type="checkbox" class="day-chk" value="1"><span>Lun</span></label>
+            <label><input type="checkbox" class="day-chk" value="2"><span>Mar</span></label>
+            <label><input type="checkbox" class="day-chk" value="3"><span>Mié</span></label>
+            <label><input type="checkbox" class="day-chk" value="4"><span>Jue</span></label>
+            <label><input type="checkbox" class="day-chk" value="5"><span>Vie</span></label>
+            <label><input type="checkbox" class="day-chk" value="6"><span>Sáb</span></label>
+            <label><input type="checkbox" class="day-chk" value="7"><span>Dom</span></label>
+          </div>
+          <div class="days-hint">Marca los días en los que se repite. Si tu trabajo es igual todos los días, marca todos.</div>
         </div>
         <div class="form-grid2">
           <div class="form-row">
@@ -658,7 +683,22 @@ function resetTaskForm(){
   $('#new-task-submit').textContent = 'Guardar tarea';
   $('#new-task-title').textContent = 'Nueva tarea';
   $('#task-msg').textContent = '';
+  $('#repeat-row').style.display = 'block';
+  syncDayCheckboxToFecha();
 }
+
+function syncDayCheckboxToFecha(){
+  const iso = isoWeekday_($('#f-fecha').value);
+  $$('.day-chk').forEach(chk => chk.checked = (Number(chk.value) === iso));
+}
+
+function isoWeekday_(fechaStr){
+  const d = new Date(fechaStr + 'T00:00:00');
+  const dow = d.getDay(); // 0=domingo..6=sábado
+  return dow === 0 ? 7 : dow; // 1=lunes..7=domingo
+}
+
+$('#f-fecha').addEventListener('change', syncDayCheckboxToFecha);
 
 // ---------- BANNER DE VENCIDAS ----------
 function renderBanner(tareas){
@@ -766,6 +806,7 @@ function openEditTask(id, reloadFn){
   $('#f-notas').value = t.notas || '';
   $('#new-task-submit').textContent = 'Guardar cambios';
   $('#new-task-title').textContent = 'Editar tarea';
+  $('#repeat-row').style.display = 'none';
   $$('nav.tabs button').forEach(b=>b.classList.remove('active'));
   $('nav.tabs button[data-tab="nueva"]').classList.add('active');
   ['dia','semana','equipo','nueva','admin'].forEach(t=>{
@@ -842,14 +883,15 @@ async function loadEquipo(){
 
 // ---------- NUEVA TAREA ----------
 $('#f-fecha').value = toISO(new Date());
+syncDayCheckboxToFecha();
 
 $('#new-task-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const msg = $('#task-msg');
   msg.textContent = 'Guardando...'; msg.className='';
-  const body = {
+
+  const base = {
     usuarioId: currentUser.id,
-    fecha: $('#f-fecha').value,
     horaInicio: $('#f-inicio').value,
     horaFin: $('#f-fin').value,
     actividad: $('#f-actividad').value,
@@ -858,22 +900,42 @@ $('#new-task-form').addEventListener('submit', async (e) => {
     estado: 'Sin iniciar',
     notas: $('#f-notas').value
   };
+
   try{
-    let r;
     if(editingTaskId){
-      body.id = editingTaskId;
-      r = await apiPost('actualizarTarea', body);
-    }else{
-      r = await apiPost('crearTarea', body);
+      const body = { ...base, id: editingTaskId, fecha: $('#f-fecha').value };
+      const r = await apiPost('actualizarTarea', body);
+      if(r.ok){
+        msg.textContent = 'Tarea actualizada.'; msg.className='ok';
+        const reload = editingReload;
+        resetTaskForm();
+        if(reload) reload();
+      }else{
+        msg.textContent = r.error || 'Error al guardar'; msg.className='err';
+      }
+      return;
     }
-    if(r.ok){
-      msg.textContent = editingTaskId ? 'Tarea actualizada.' : 'Tarea guardada.';
+
+    // Creación: puede repetirse en varios días de la misma semana
+    const diasMarcados = Array.from($$('.day-chk')).filter(c=>c.checked).map(c=>Number(c.value));
+    const dias = diasMarcados.length ? diasMarcados : [isoWeekday_($('#f-fecha').value)];
+    const monday = startOfWeek(new Date($('#f-fecha').value + 'T00:00:00'));
+
+    const resultados = await Promise.all(dias.map(iso => {
+      const fecha = new Date(monday);
+      fecha.setDate(monday.getDate() + (iso - 1));
+      return apiPost('crearTarea', { ...base, fecha: toISO(fecha) });
+    }));
+
+    const exitosas = resultados.filter(r => r.ok).length;
+    if(exitosas === resultados.length){
+      msg.textContent = exitosas > 1 ? `Tarea guardada en ${exitosas} días.` : 'Tarea guardada.';
       msg.className='ok';
-      const reload = editingReload;
       resetTaskForm();
-      if(reload) reload();
+      loadDia();
     }else{
-      msg.textContent = r.error || 'Error al guardar'; msg.className='err';
+      msg.textContent = `Se guardaron ${exitosas} de ${resultados.length}. Revisa e intenta de nuevo.`;
+      msg.className='err';
     }
   }catch(err){
     msg.textContent = 'No se pudo conectar con el servidor.'; msg.className='err';
