@@ -370,6 +370,7 @@
           <option>Coordinador</option>
           <option>Director</option>
           <option>Analista de Calidad</option>
+          <option>Super Admin</option>
         </select>
       </div>
       <div class="reg-field">
@@ -402,6 +403,7 @@
     <button data-tab="equipo">Equipo</button>
     <button data-tab="nueva">Nueva tarea</button>
     <button data-tab="admin" id="admin-tab-btn" style="display:none;">Admin</button>
+    <button data-tab="todas" id="todas-tab-btn" style="display:none;">Todas las tareas</button>
   </nav>
 
   <main>
@@ -454,12 +456,31 @@
           <div><label>Cargo</label><input type="text" id="a-cargo" required></div>
           <div><label>PIN (4 dígitos)</label><input type="text" id="a-pin" maxlength="6" required></div>
           <div><label>Rol</label>
-            <select id="a-rol"><option>Coordinador</option><option>Director</option><option>Analista de Calidad</option></select>
+            <select id="a-rol"><option>Coordinador</option><option>Director</option><option>Analista de Calidad</option><option>Super Admin</option></select>
           </div>
         </div>
         <button type="submit" class="btn-primary">Agregar</button>
         <div id="admin-msg"></div>
       </form>
+    </section>
+
+    <!-- TODAS LAS TAREAS (Super Admin) -->
+    <section id="tab-todas" style="display:none;">
+      <div class="section-title">
+        <h2>Todas las tareas</h2>
+        <span class="sub" id="todas-week-range"></span>
+      </div>
+      <div class="form-row" style="max-width:280px;">
+        <label>Filtrar por persona</label>
+        <select id="todas-filtro-usuario">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="export-bar" style="margin-bottom:14px;">
+        <button class="btn-ghost" id="export-todas-xlsx">⬇ Excel</button>
+        <button class="btn-ghost" id="export-todas-pdf">⬇ PDF</button>
+      </div>
+      <div id="todas-list"></div>
     </section>
 
     <!-- NUEVA TAREA -->
@@ -653,8 +674,11 @@ function enterApp(){
   $('#user-name').textContent = currentUser.nombre;
   $('#user-role').textContent = currentUser.cargo;
   $('#avatar-initial').textContent = currentUser.nombre.charAt(0).toUpperCase();
-  if(currentUser.rol === 'Director'){
+  if(currentUser.rol === 'Director' || currentUser.rol === 'Super Admin'){
     $('#admin-tab-btn').style.display = 'inline-block';
+  }
+  if(currentUser.rol === 'Super Admin'){
+    $('#todas-tab-btn').style.display = 'inline-block';
   }
   loadDia();
 }
@@ -664,13 +688,14 @@ $$('nav.tabs button').forEach(btn=>{
   btn.addEventListener('click', () => {
     $$('nav.tabs button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    ['dia','semana','equipo','nueva','admin'].forEach(t=>{
+    ['dia','semana','equipo','nueva','admin','todas'].forEach(t=>{
       $('#tab-'+t).style.display = (t===btn.dataset.tab) ? 'block' : 'none';
     });
     if(btn.dataset.tab==='dia') loadDia();
     if(btn.dataset.tab==='semana') loadSemana();
     if(btn.dataset.tab==='equipo') loadEquipo();
     if(btn.dataset.tab==='admin') loadAdmin();
+    if(btn.dataset.tab==='todas') loadTodas();
     if(btn.dataset.tab==='nueva') resetTaskForm();
   });
 });
@@ -746,7 +771,7 @@ function taskCard(t){
     'Sin iniciar':'En curso', 'En curso':'Completado', 'Completado':'Pendiente', 'Pendiente':'Sin iniciar'
   }[t.estado] || 'Sin iniciar';
   const tipoClass = 'tipo-' + t.tipo.replace(' ', '\\ ');
-  const soyDueño = String(t.usuarioId) === String(currentUser.id);
+  const soyDueño = String(t.usuarioId) === String(currentUser.id) || currentUser.rol === 'Super Admin';
   return `
   <div class="task-card ${tipoClass}">
     <div class="task-time">${t.horaInicio}<br>${t.horaFin}</div>
@@ -755,6 +780,7 @@ function taskCard(t){
       <div class="task-meta">
         <span class="badge pri-${t.prioridad}">${t.prioridad}</span>
         <span class="badge" style="background:var(--slate-bg);color:var(--slate);">${t.tipo}</span>
+        ${t.nombreUsuario ? `<span class="badge" style="background:var(--accent-bg);color:var(--accent);">${escapeHtml(t.nombreUsuario)}</span>` : ''}
       </div>
     </div>
     ${soyDueño ? `
@@ -809,7 +835,7 @@ function openEditTask(id, reloadFn){
   $('#repeat-row').style.display = 'none';
   $$('nav.tabs button').forEach(b=>b.classList.remove('active'));
   $('nav.tabs button[data-tab="nueva"]').classList.add('active');
-  ['dia','semana','equipo','nueva','admin'].forEach(t=>{
+  ['dia','semana','equipo','nueva','admin','todas'].forEach(t=>{
     $('#tab-'+t).style.display = (t==='nueva') ? 'block' : 'none';
   });
 }
@@ -880,6 +906,76 @@ async function loadEquipo(){
     </div>
   `).join('');
 }
+
+// ---------- TODAS LAS TAREAS (Super Admin) ----------
+let usuariosMap_ = {};
+
+async function loadTodas(){
+  const monday = startOfWeek(new Date());
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  $('#todas-week-range').textContent = `${toISO(monday)} — ${toISO(sunday)}`;
+
+  const usuarios = await api('getUsuarios');
+  usuariosMap_ = {};
+  usuarios.forEach(u => usuariosMap_[u.id] = u.nombre);
+
+  const select = $('#todas-filtro-usuario');
+  const seleccionado = select.value;
+  select.innerHTML = '<option value="">Todos</option>' + usuarios.map(u => `<option value="${u.id}">${escapeHtml(u.nombre)}</option>`).join('');
+  select.value = seleccionado;
+
+  const tareas = await api('getTareas', {desde: toISO(monday), hasta: toISO(sunday)});
+  tareas.forEach(t => t.nombreUsuario = usuariosMap_[t.usuarioId] || 'Desconocido');
+  cachedTareasAll = mergeCache_(cachedTareasAll, tareas);
+
+  renderTodas(tareas, monday);
+}
+
+function renderTodas(tareas, monday){
+  const filtro = $('#todas-filtro-usuario').value;
+  const filtradas = filtro ? tareas.filter(t => String(t.usuarioId) === String(filtro)) : tareas;
+
+  const byDay = {};
+  for(let i=0;i<7;i++){
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
+    byDay[toISO(d)] = [];
+  }
+  filtradas.forEach(t => { if(byDay[t.fecha]) byDay[t.fecha].push(t); });
+
+  const list = $('#todas-list');
+  const hayTareas = filtradas.length > 0;
+  if(!hayTareas){ list.innerHTML = emptyState('Sin tareas para mostrar'); return; }
+
+  list.innerHTML = Object.keys(byDay).map(fecha=>{
+    const dow = DIAS[new Date(fecha+'T00:00:00').getDay()];
+    const items = byDay[fecha].sort((a,b)=>a.horaInicio.localeCompare(b.horaInicio));
+    return `<div class="day-group">
+      <h3>${dow} · ${fecha}</h3>
+      ${items.length ? items.map(taskCard).join('') : emptyState('Sin tareas')}
+    </div>`;
+  }).join('');
+  bindStatusButtons(list, () => loadTodas());
+}
+
+$('#todas-filtro-usuario').addEventListener('change', () => loadTodas());
+
+$('#export-todas-xlsx').addEventListener('click', async () => {
+  const monday = startOfWeek(new Date());
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  const tareas = await api('getTareas', {desde: toISO(monday), hasta: toISO(sunday)});
+  tareas.forEach(t => t.nombreUsuario = usuariosMap_[t.usuarioId] || 'Desconocido');
+  const headerMap = {nombreUsuario:'Persona', fecha:'Fecha', horaInicio:'Inicio', horaFin:'Fin', actividad:'Actividad', tipo:'Tipo', prioridad:'Prioridad', estado:'Estado', notas:'Notas'};
+  exportExcel(tareas, `todas_las_tareas_semana_${toISO(monday)}.xlsx`, headerMap);
+});
+
+$('#export-todas-pdf').addEventListener('click', async () => {
+  const monday = startOfWeek(new Date());
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  const tareas = await api('getTareas', {desde: toISO(monday), hasta: toISO(sunday)});
+  tareas.forEach(t => t.nombreUsuario = usuariosMap_[t.usuarioId] || 'Desconocido');
+  const filas = tareas.map(t => [t.nombreUsuario, t.fecha, t.horaInicio, t.horaFin, t.actividad, t.tipo, t.prioridad, t.estado]);
+  exportPDF(`Todas las tareas — semana ${toISO(monday)}`, ['Persona','Fecha','Inicio','Fin','Actividad','Tipo','Prioridad','Estado'], filas, `todas_las_tareas_${toISO(monday)}.pdf`);
+});
 
 // ---------- NUEVA TAREA ----------
 $('#f-fecha').value = toISO(new Date());
@@ -961,6 +1057,7 @@ async function loadAdmin(){
             <option ${u.rol==='Coordinador'?'selected':''}>Coordinador</option>
             <option ${u.rol==='Director'?'selected':''}>Director</option>
             <option ${u.rol==='Analista de Calidad'?'selected':''}>Analista de Calidad</option>
+            <option ${u.rol==='Super Admin'?'selected':''}>Super Admin</option>
           </select>
         </div>
       </div>
