@@ -305,6 +305,7 @@
 
   /* ---------- EXPORT BAR ---------- */
   .export-bar{display:flex;gap:8px;}
+  .week-nav{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
   .btn-ghost{
     background:var(--paper-card);border:1px solid var(--line);border-radius:8px;
     padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--ink-soft);
@@ -368,9 +369,7 @@
         <label>Rol</label>
         <select id="r-rol">
           <option>Coordinador</option>
-          <option>Director</option>
           <option>Analista de Calidad</option>
-          <option>Super Admin</option>
         </select>
       </div>
       <div class="reg-field">
@@ -424,6 +423,11 @@
         <h2>Mi semana</h2>
         <span class="sub" id="week-range"></span>
       </div>
+      <div class="week-nav">
+        <button class="btn-ghost" id="semana-prev">◀ Semana anterior</button>
+        <button class="btn-ghost" id="semana-hoy">Semana actual</button>
+        <button class="btn-ghost" id="semana-next">Semana siguiente ▶</button>
+      </div>
       <div class="export-bar" style="margin-bottom:14px;">
         <button class="btn-ghost" id="export-semana-xlsx">⬇ Excel</button>
         <button class="btn-ghost" id="export-semana-pdf">⬇ PDF</button>
@@ -469,6 +473,11 @@
       <div class="section-title">
         <h2>Todas las tareas</h2>
         <span class="sub" id="todas-week-range"></span>
+      </div>
+      <div class="week-nav">
+        <button class="btn-ghost" id="todas-prev">◀ Semana anterior</button>
+        <button class="btn-ghost" id="todas-hoy">Semana actual</button>
+        <button class="btn-ghost" id="todas-next">Semana siguiente ▶</button>
       </div>
       <div class="form-row" style="max-width:280px;">
         <label>Filtrar por persona</label>
@@ -637,7 +646,7 @@ $('#register-btn').addEventListener('click', async () => {
   msg.style.color = '#A7ADC2';
   msg.textContent = 'Creando cuenta...';
   try{
-    const r = await apiPost('crearUsuario', {nombre, cargo, rol, pin});
+    const r = await apiPost('registrarUsuario', {nombre, cargo, rol, pin});
     if(r.ok){
       msg.style.color = '#7FE8B8';
       msg.textContent = 'Cuenta creada. Ingresando...';
@@ -854,8 +863,16 @@ function escapeHtml(s){
 }
 
 // ---------- MI SEMANA ----------
-async function loadSemana(){
+let semanaOffset = 0;
+
+function semanaMonday_(offset){
   const monday = startOfWeek(new Date());
+  monday.setDate(monday.getDate() + offset*7);
+  return monday;
+}
+
+async function loadSemana(){
+  const monday = semanaMonday_(semanaOffset);
   const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
   $('#week-range').textContent = `${toISO(monday)} — ${toISO(sunday)}`;
   const tareas = await api('getTareas', {usuarioId: currentUser.id, desde: toISO(monday), hasta: toISO(sunday)});
@@ -879,6 +896,10 @@ async function loadSemana(){
   }).join('');
   bindStatusButtons(list, loadSemana);
 }
+
+$('#semana-prev').addEventListener('click', () => { semanaOffset--; loadSemana(); });
+$('#semana-next').addEventListener('click', () => { semanaOffset++; loadSemana(); });
+$('#semana-hoy').addEventListener('click', () => { semanaOffset = 0; loadSemana(); });
 
 // ---------- EQUIPO ----------
 async function loadEquipo(){
@@ -910,8 +931,10 @@ async function loadEquipo(){
 // ---------- TODAS LAS TAREAS (Super Admin) ----------
 let usuariosMap_ = {};
 
+let todasOffset = 0;
+
 async function loadTodas(){
-  const monday = startOfWeek(new Date());
+  const monday = semanaMonday_(todasOffset);
   const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
   $('#todas-week-range').textContent = `${toISO(monday)} — ${toISO(sunday)}`;
 
@@ -958,9 +981,12 @@ function renderTodas(tareas, monday){
 }
 
 $('#todas-filtro-usuario').addEventListener('change', () => loadTodas());
+$('#todas-prev').addEventListener('click', () => { todasOffset--; loadTodas(); });
+$('#todas-next').addEventListener('click', () => { todasOffset++; loadTodas(); });
+$('#todas-hoy').addEventListener('click', () => { todasOffset = 0; loadTodas(); });
 
 $('#export-todas-xlsx').addEventListener('click', async () => {
-  const monday = startOfWeek(new Date());
+  const monday = semanaMonday_(todasOffset);
   const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
   const tareas = await api('getTareas', {desde: toISO(monday), hasta: toISO(sunday)});
   tareas.forEach(t => t.nombreUsuario = usuariosMap_[t.usuarioId] || 'Desconocido');
@@ -969,7 +995,7 @@ $('#export-todas-xlsx').addEventListener('click', async () => {
 });
 
 $('#export-todas-pdf').addEventListener('click', async () => {
-  const monday = startOfWeek(new Date());
+  const monday = semanaMonday_(todasOffset);
   const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
   const tareas = await api('getTareas', {desde: toISO(monday), hasta: toISO(sunday)});
   tareas.forEach(t => t.nombreUsuario = usuariosMap_[t.usuarioId] || 'Desconocido');
@@ -1146,16 +1172,20 @@ function exportPDF(titulo, columnas, filas, filename){
   doc.save(filename);
 }
 
-$('#export-semana-xlsx').addEventListener('click', () => {
+$('#export-semana-xlsx').addEventListener('click', async () => {
+  const monday = semanaMonday_(semanaOffset);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
   const headerMap = {fecha:'Fecha', horaInicio:'Inicio', horaFin:'Fin', actividad:'Actividad', tipo:'Tipo', prioridad:'Prioridad', estado:'Estado', notas:'Notas'};
-  const tareas = Object.values(cachedTareasAll).filter(t => String(t.usuarioId) === String(currentUser.id));
-  exportExcel(tareas, `mi_semana_${currentUser.nombre.replace(/\s/g,'_')}.xlsx`, headerMap);
+  const tareas = await api('getTareas', {usuarioId: currentUser.id, desde: toISO(monday), hasta: toISO(sunday)});
+  exportExcel(tareas, `mi_semana_${currentUser.nombre.replace(/\s/g,'_')}_${toISO(monday)}.xlsx`, headerMap);
 });
 
-$('#export-semana-pdf').addEventListener('click', () => {
-  const tareas = Object.values(cachedTareasAll).filter(t => String(t.usuarioId) === String(currentUser.id));
+$('#export-semana-pdf').addEventListener('click', async () => {
+  const monday = semanaMonday_(semanaOffset);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  const tareas = await api('getTareas', {usuarioId: currentUser.id, desde: toISO(monday), hasta: toISO(sunday)});
   const filas = tareas.map(t => [t.fecha, t.horaInicio, t.horaFin, t.actividad, t.tipo, t.prioridad, t.estado]);
-  exportPDF(`Mi semana — ${currentUser.nombre}`, ['Fecha','Inicio','Fin','Actividad','Tipo','Prioridad','Estado'], filas, `mi_semana_${currentUser.nombre.replace(/\s/g,'_')}.pdf`);
+  exportPDF(`Mi semana — ${currentUser.nombre}`, ['Fecha','Inicio','Fin','Actividad','Tipo','Prioridad','Estado'], filas, `mi_semana_${currentUser.nombre.replace(/\s/g,'_')}_${toISO(monday)}.pdf`);
 });
 
 $('#export-equipo-xlsx').addEventListener('click', async () => {
